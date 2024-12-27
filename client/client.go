@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -16,11 +17,18 @@ func Start() {
 	serverURL := env["SERVER_URL"]
 
 	conn, err := net.Dial("tcp", serverURL)
-
 	if err != nil {
 		log.Println("Error sending tcp:", err)
 		return
 	}
 
 	defer conn.Close()
+
+	data := []byte("MSFT")
+	_, err = conn.Write(data)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
 }

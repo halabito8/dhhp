@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -41,14 +42,29 @@ func Start() {
 }
 
 func handleClient(conn net.Conn) {
+	defer conn.Close()
+
 	log.Println("Connection made")
-	res, err := http.Get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=AAPL&interval=5min&apikey=UAWADI46W0EEK2PT")
+
+	buffer := make([]byte, 1024)
+
+	n, err := conn.Read(buffer)
+	if err != nil {
+		log.Println("Error:", err)
+		return
+	}
+
+	log.Printf("Received: %s", buffer[:n])
+	symbol := strings.TrimSpace(string(buffer[:n]))
+
+	res, err := http.Get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=" + symbol + "&interval=5min&apikey=UAWADI46W0EEK2PT")
 	if err != nil {
 		log.Printf("error making http request: %s\n", err)
 	}
 
 	body, err := io.ReadAll(res.Body)
 	defer res.Body.Close()
+
 	if err != nil {
 		log.Printf("Error reading body: %v", err)
 		return
@@ -70,5 +86,4 @@ func handleClient(conn net.Conn) {
 		fmt.Printf("Volume: %d\n", data.Volume)
 	}
 
-	defer conn.Close()
 }
