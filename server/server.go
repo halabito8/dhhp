@@ -1,9 +1,13 @@
 package server
 
 import (
+	"dhhp/models"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"net/http"
 
 	"github.com/joho/godotenv"
 )
@@ -38,5 +42,33 @@ func Start() {
 
 func handleClient(conn net.Conn) {
 	log.Println("Connection made")
+	res, err := http.Get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=AAPL&interval=5min&apikey=UAWADI46W0EEK2PT")
+	if err != nil {
+		log.Printf("error making http request: %s\n", err)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	if err != nil {
+		log.Printf("Error reading body: %v", err)
+		return
+	}
+
+	var stockData models.StockResponse
+	if err := json.Unmarshal(body, &stockData); err != nil {
+		log.Printf("Error unmarshaling JSON: %v", err)
+		return
+	}
+
+	fmt.Printf("Symbol: %s\n", stockData.MetaData.Symbol)
+	fmt.Printf("Last Refreshed: %s\n", stockData.MetaData.LastRefreshed)
+
+	for timestamp, data := range stockData.TimeSeries {
+		fmt.Printf("\nTimestamp: %s\n", timestamp)
+		fmt.Printf("Open: %.4f\n", data.Open)
+		fmt.Printf("Close: %.4f\n", data.Close)
+		fmt.Printf("Volume: %d\n", data.Volume)
+	}
+
 	defer conn.Close()
 }
