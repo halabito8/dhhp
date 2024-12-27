@@ -31,4 +31,14 @@ func Start() {
 		return
 	}
 
+	buffer := make([]byte, 1024)
+
+	n, err := conn.Read(buffer)
+	if err != nil {
+		log.Println("Error:", err)
+		return
+	}
+
+	log.Printf("Received: %s", buffer[:n])
+
 }

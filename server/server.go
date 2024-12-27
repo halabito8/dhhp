@@ -86,4 +86,14 @@ func handleClient(conn net.Conn) {
 		fmt.Printf("Volume: %d\n", data.Volume)
 	}
 
+	response := fmt.Sprintf("[TICKER:%s][PRICE:%f][TIME:%s]", symbol, stockData.TimeSeries["2024-12-26 19:55:00"].Close, "2024-12-26 19:55:00")
+
+	_, err = conn.Write([]byte(response))
+	if err != nil {
+		fmt.Println("Error sending response to client:", err)
+		return
+	}
+
+	fmt.Println("Response sent to client:", response)
+
 }
